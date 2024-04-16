@@ -1,0 +1,8 @@
+.vscode/
+slides
+.DS_Store
+.DS_Store/
+*/.DS_Store/
+bin/*
+*/*.pyc
+*/__pycache__/
