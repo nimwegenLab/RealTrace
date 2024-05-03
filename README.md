@@ -1,6 +1,6 @@
 # RealTrace
 
-__Version: 0.4.3__
+__Version: 0.4.4__
 
 ---
 ## Table of Contents
@@ -31,6 +31,7 @@ __Version: 0.4.3__
     - [Changes in 0.4.1](#changes-in-041)
     - [Changes in 0.4.2](#changes-in-042)
     - [Changes in 0.4.3](#changes-in-043)
+    - [Changes in 0.4.4](#changes-in-044)
   - [TODO](#todo)
 
 ---
@@ -300,6 +301,9 @@ The code has a number of errors that might be thrown at runtime. Some of them ar
 - 
 ### Changes in 0.4.3 
 - only returns full posterior
+
+### Changes in 0.4.4
+- use absolute value of scaled error variance to cope with negative input
 
 ## TODO
 - [x] prepare for cluster

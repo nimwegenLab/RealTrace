@@ -125,7 +125,7 @@ void sc_prediction_forward(const std::vector<std::vector<double>> &params_vecs,
 
         /* if chosen, noise in fp is scaled with sqrt of the fp content itself */
         if (cell.noise_model == "scaled"){
-            D <<  params_vec[7], 0, 0,  params_vec[8]*(cell.mean(1)+cell.fp_auto);
+            D <<  params_vec[7], 0, 0,  abs(params_vec[8]*(cell.mean(1)+cell.fp_auto));
         }
         else {
             D <<  params_vec[7], 0, 0,  params_vec[8];
@@ -398,8 +398,8 @@ void sc_prediction_backward(const std::vector<std::vector<double>> &params_vecs,
         params_vec = params_vecs[cell.segment[t]];
 
         /* if chosen, noise in fp is scaled with sqrt of the fp content itself */
-        if (cell.noise_model== "scaled"){
-            D <<  params_vec[7], 0, 0, params_vec[8]*(cell.mean(1)+cell.fp_auto);
+        if (cell.noise_model == "scaled"){
+            D <<  params_vec[7], 0, 0, abs(params_vec[8]*(cell.mean(1)+cell.fp_auto));
         }
         else {
             D <<  params_vec[7], 0, 0,  params_vec[8];
