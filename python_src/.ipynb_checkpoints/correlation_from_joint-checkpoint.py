@@ -302,7 +302,7 @@ class Correlation:
         self.cc += c * c[:,np.newaxis]
 
 
-    # the following functions are simple implementations but they are not often run
+    # the following functions are simple implementations but they is not often run
     def average(self):
         """calculated covariance <xy> - <x><y>, sets cov
         """
@@ -331,9 +331,6 @@ class Correlation:
         self.corr_naive = np.zeros((8,8))
         self.corr_concentration_naive = np.zeros((2,2))
 
-        if self.dt==0:
-            print(self.cov)
-
         if self.n>0:
             for i in range(8):
                 for j in range(8):
@@ -342,8 +339,6 @@ class Correlation:
                 for j in range(2):
                     self.corr_concentration_naive[i,j] =  self.cov_concentration[i,j] \
                                              / np.sqrt(self.cov_concentration[i,i] * self.cov_concentration[j,j])
-        if self.dt==0:
-            print(self.corr_naive)
 
     def mle(self, covarince0, covarince_concentration0, norm=True):
         """MLE of the correlation with error bars, sets corr_mle and corr_mle_err
@@ -552,8 +547,8 @@ def files2correlation_function(joint_file,
                 line_splitted = line.strip('\n').split(',')[3:]
                 for entry in line_splitted:
                     if entry != '':
-                        cell_id_cols.append( "_".join(entry.split('_')[:-1]) )
-                        time_point_cols.append(float(entry.split('_')[-1]))
+                        cell_id_cols.append(entry.split('_')[0])
+                        time_point_cols.append(float(entry.split('_')[1]))
                         
     # finally calculate cov, corr_naive, corr_mle, corr_mle_error
     for i, _ in enumerate(dts):
@@ -682,11 +677,20 @@ def process_file(joint_filename, args):
             
         output_file_csv = output_file_npz[:-4] + ".csv"
         to_save_dict = read_final_params(joint_filename)
-
-        corr = files2correlation_function(joint_filename, 
-                                            prediction_filename, 
-                                            np.arange(0, dt_max[condition],  dts[condition]), 
-                                            dts[condition]*0.2)
+        if not args.normalize_time:
+            corr = files2correlation_function(joint_filename, 
+                                              prediction_filename, 
+                                              np.arange(0, dt_max[condition],  dts[condition]), 
+                                              dts[condition]*0.2)
+        else:
+            cells_data = pd.read_csv(prediction_filename, skiprows=header_lines(prediction_filename))
+            cells = df2ggp_cells(cells_data)
+            corr = files2correlation_function(joint_filename, 
+                                              prediction_filename, 
+                                              np.arange(0, 3, 0.05),
+                                              0.024, 
+                                              normalize_time=True, 
+                                              cell_cylce_time=get_cell_cycle_times(cells))
         
 
         ### Save ###
@@ -767,21 +771,17 @@ def main():
     try:
         n_cores = os.environ['SLURM_JOB_CPUS_PER_NODE']
         print("slurm: number of cpus {}".format(n_cores))
-        print(n_cores)
-        with get_context("spawn").Pool(int(n_cores)) as p:
-            print("Start multiprocessing")
-            p.starmap(process_file, zip(joint_filenames, itertools.repeat(args)))
-            p.close()
-            p.join()
-            print("Join")
-
     except Exception as e:
         n_cores = 1
         print("SLURM_JOB_CPUS_PER_NODE unknown, use one 1 core")
-        for joint_filename in joint_filenames:
-            process_file(joint_filename, args)
 
-    
+    print(n_cores)
+    with get_context("spawn").Pool(int(n_cores)) as p:
+        print("Start multiprocessing")
+        p.starmap(process_file, zip(joint_filenames, itertools.repeat(args)))
+        p.close()
+        p.join()
+        print("Join")
 
 
 class ARGS:

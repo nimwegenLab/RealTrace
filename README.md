@@ -65,7 +65,7 @@ make install
 ```
 2. Compile 
 - Clone this repository and navigate to the `src` directory within the repository
-- Run `make cluster`. This will run `ml GCC/8.3.0; ml Eigen/3.3.7` as well as the compile command! Note, that the modules remain loaded after compilation.
+- Run `ml GCCcore/13.3.0 ; ml Eigen/3.4.0-GCCcore-13.3.0 ;` followed by `make`. Note, that the modules remain loaded after compilation.
 
 
 ## 2 Run
