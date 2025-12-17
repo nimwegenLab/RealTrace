@@ -1,6 +1,6 @@
 # RealTrace
 
-__Version: 0.4.4__
+__Version: 0.4.5__
 
 ---
 ## Table of Contents
