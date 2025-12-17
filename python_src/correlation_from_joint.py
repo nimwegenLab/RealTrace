@@ -513,6 +513,7 @@ def files2correlation_function(joint_file,
     skip = True
     i=0
     ### read the joint_file to get statistics for C(dt>0)  ###
+
     with open(joint_file,'r') as fin:
         for _, line in enumerate(fin):
             if not skip:
@@ -524,8 +525,7 @@ def files2correlation_function(joint_file,
                 for j, joint in enumerate(joints_vecs):
                     time_plus_dt = time_point_cols[j] 
                     dt = time_plus_dt - time_row
-                    if normalize_time:
-                        dt /= cell_cylce_time[cell_id_row]
+
                     if joint != None:     
                         idx = np.argwhere(np.isclose(dts, dt, atol=tol))
                         if len(idx)>0:
@@ -655,23 +655,26 @@ def header_lines(filename, until="cell_id"):
             if line.startswith(until):
                 return i
 
-            
-def get_cell_cycle_times(cells):
-    cell_cycle_times = {}
-    for cell in cells:
-        cell_cycle_times[cell.cell_id] = cell.time[-1] - cell.time[0] 
-    return cell_cycle_times
+
     
 # ================================================================== #
 def process_file(joint_filename, args):    
 #     try:
-        dts = {}
-        dt_max = {}
-        for i, k in enumerate(args.key):
-            dts[k] = args.dt[i]
-            dt_max[k] = args.dt[i]*args.n_data
 
-        condition = get_condition(joint_filename, args)
+        if args.key==None:
+            dt_arr = np.arange(0,  args.dt[0]*args.n_data, args.dt[0])  
+            tol = args.dt[0]*0.2
+        else:
+            dts = {}
+            dt_max = {}
+            for i, k in enumerate(args.key):
+                dts[k] = args.dt[i]
+                dt_max[k] = args.dt[i]*args.n_data
+
+            condition = get_condition(joint_filename, args)
+            dt_arr = np.arange(0, dt_max[condition], dts[condition])
+            tol = dts[condition]*0.2
+
         prediction_filename = joint_filename.replace("joints", "prediction")
         
         if args.output_dir== None:
@@ -682,11 +685,7 @@ def process_file(joint_filename, args):
             
         output_file_csv = output_file_npz[:-4] + ".csv"
         to_save_dict = read_final_params(joint_filename)
-
-        corr = files2correlation_function(joint_filename, 
-                                            prediction_filename, 
-                                            np.arange(0, dt_max[condition],  dts[condition]), 
-                                            dts[condition]*0.2)
+        corr = files2correlation_function(joint_filename, prediction_filename, dt_arr, tol)
         
 
         ### Save ###
@@ -719,19 +718,19 @@ def main():
 
     parser.add_argument('-k',
                         dest='key',
-                        help='Keywords marking the files for a given dt (["acetate", "glycerol", "glucose", "glucoseaa"])',
+                        help='Keywords marking the files for a given dt (None)',
                         nargs='+',
                         type=str,
-                        default=["acetate", "glycerol", "glucose", "glucoseaa"],
+                        default=None,
                         required=False)
 
     parser.add_argument('-dt',
                         dest='dt',
-                        help='dt corresponding to keys provided by -k ([18.75, 6, 3, 1.5])',
+                        help='dt corresponding to keys provided by -k (None)',
                         nargs='+',
                         type=float,
-                        default=[18.75, 6, 3, 1.5],
-                        required=False)
+                        default=None,
+                        required=True)
 
     parser.add_argument('-n_data',
                         dest='n_data',
@@ -747,10 +746,6 @@ def main():
                         default='_',
                         required=False)
     
-    parser.add_argument('-norm',
-                        dest='normalize_time',
-                        help="Normalize time with cell cycle time", 
-                        action='store_true')
 
     args = parser.parse_args()
 
@@ -784,20 +779,19 @@ def main():
     
 
 
-class ARGS:
-    def __init__(self):
-        pass
+# class ARGS:
+#     def __init__(self):
+#         pass
         
-def profile_main():
-    args = ARGS()
-    args.dt = [18.75, 6, 3, 1.5]
-    args.key = ["acetate", "glycerol", "glucose", "glucoseaa"]
-    args.n_data = 200
-    args.output_dir = None
-    args.delimiter = "_"
-    args.normalize_time = True
-    process_file("../../experimental_data/data_dany/test_joint/acetate_hi1_f01234578910_b_joints.csv", args)
-    return 0
+# def profile_main():
+#     args = ARGS()
+#     args.dt = [18.75, 6, 3, 1.5]
+#     args.key = ["acetate", "glycerol", "glucose", "glucoseaa"]
+#     args.n_data = 200
+#     args.output_dir = None
+#     args.delimiter = "_"
+#     process_file("../../experimental_data/data_dany/test_joint/acetate_hi1_f01234578910_b_joints.csv", args)
+#     return 0
          
          
 # ================================================================================ #
