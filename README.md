@@ -32,6 +32,7 @@ __Version: 0.4.4__
     - [Changes in 0.4.2](#changes-in-042)
     - [Changes in 0.4.3](#changes-in-043)
     - [Changes in 0.4.4](#changes-in-044)
+    - [Changes in 0.4.5](#changes-in-045)
   - [TODO](#todo)
 
 ---
@@ -171,7 +172,7 @@ The following settings define how the input file will be interpreted.
 - `delm (,)`: delimiter between columns, probably ',' or ';'
 - `segment_col ()`: column from which the segment index is read. Not setting `segment_col` in the file indicates that segment indices will not be used 
 - `filter_col ()`: column from which the filter will be read. To include a data point, set the entry in this column to `True`, `true`, `TRUE` or `1` and to EXclude a data point, set the entry in this column to `False`, `false`, `FALSE` or `0`. Not setting `filter_col` in the file indicates that the input file will not be filtered
-- `cell_tag (cell_id)`: columns that will make up the unique cell id, endings like .0 .00, etc of numeric values will be removed
+- `cell_tag (cell_id)`: columns that will make up the unique cell id
 - `parent_tags (parent_id)`: columns that will make up the unique cell id of the parent cell, endings like .0 .00, etc of numeric values will be removed
 
 
@@ -304,6 +305,9 @@ The code has a number of errors that might be thrown at runtime. Some of them ar
 
 ### Changes in 0.4.4
 - use absolute value of scaled error variance to cope with negative input
+
+### Changes in 0.4.5
+- do not remove `.0` type ends of cell ids
 
 ## TODO
 - [x] prepare for cluster

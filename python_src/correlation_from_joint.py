@@ -531,6 +531,11 @@ def files2correlation_function(joint_file,
                         if len(idx)>0:
                             correlations[idx[0,0]].add_gaussian(joint)
                     else:
+                        print("cell_id_cols[j]", cell_id_cols[j])
+                        print("cell_id_row", cell_id_row)
+                        print("->", cell_lineage_lookup_table.loc[cell_id_row, cell_id_cols[j]])
+                        print("----------")
+
                         if cell_lineage_lookup_table.loc[cell_id_row, cell_id_cols[j]] and j>i:
                             
                             idx = np.argwhere(np.isclose(dts, dt, atol=tol))  
