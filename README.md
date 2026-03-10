@@ -92,7 +92,7 @@ make install
 Example: `./RealTrace -c csv_config.txt -b parameters.txt -i data/example.csv -o out/ -l 1 -t 1e-10 -m -p`
 
 ### 2.1 Required arguments
-- `infile` sets the input file that contains the data, eg as given by MOMA (see 2.1.1)
+- `infile` sets the input file that contains the data, eg as provided by MOMA (see 2.1.1)
 - `parameter_bounds` sets the file that defines the parameter space (see 2.1.2)
 
 #### 2.1.1 Input file
@@ -128,17 +128,17 @@ var_g = 1, 1e-3
 var_dx = 1e-4, 1e-5
 var_dg = 1, 1e-2
 ```
-ALL parameters are restricted to positive numbers by default avoiding unphysical/meaningless parameter ranges. By setting the lower bound in the parameter file, one can overwrite the lower bounds of the parameters. 
+ALL parameters are restricted to positive numbers by default avoiding unphysical/meaningless parameter ranges. However, this can be overwritten by setting bounds
 
-During the maximization, the s will be the initial step size. From nlopt doc: 
+During the maximization, the step will be the initial step size. From nlopt doc: 
 "For derivative-free local-optimization algorithms, the optimizer must somehow decide on some initial step size to perturb x by when it begins the optimization. This step size should be big enough that the value of the objective changes significantly, but not too big if you want to find the local optimum nearest to x."
 
 ### 2.2 Using segments
-To analyze data sets that contain data points that shall be fitted by a different set of underlying parameters, segment indices can be used. For that, a `segment_col` in the `csv_config` file can be specified. This column should contain the _segment index_ specifying for each data point to which segment it belongs. The segment indices are required to be consecutive and start at index 0. 
+To analyze data sets that contain data points that need be fitted by a different set of underlying parameters, segment indices can be used. For that, a `segment_col` in the `csv_config` file can be specified. This column should contain the _segment index_ specifying for each data point to which segment it belongs. The segment indices are required to be consecutive and start at index 0. 
 
 The likelihood maximization that determines the parameter estimates is run independently for each segment. That means there is no difference between running different segments in separate runs or as part of the same data set. The same behavior is used for 1d scans. However, the predictions as well as the calculation of the joint probabilities that are used for the correlation functions are calculated by iterating through the entire data set. For that, the following scheme is used
 ![](Segments_scheme.png)
-Where each step involves two calculations: the calculation of the new prior which depends on the parameters of the biophysical model and the calculation of the posterior which depends on the parameters of the measurement noise. Note, that the prior calculation to go from time points 2 to 3 and vice versa both take the parameters of the 0th segment.
+Note, that the prior calculation to go from time points 2 to 3 and vice versa both take the parameters of the 0th segment.
 
 For each segment in the data set one parameter file is required submitted in the order of the segment indices. For example:
 ```
@@ -147,51 +147,55 @@ For each segment in the data set one parameter file is required submitted in the
 will use the parameters in the file `parametersA.txt` for the segment with index 0 and the parameters in the file `parametersB.txt` for the segment with index 1, etc...
 
 ### 2.2.3 Optional arguments
+(Defaults are in brackets.)
 - `csv_config` sets the file that contains information on which columns will be used from the input file (see 2.3.1)
-- `print_level (0)` set to 0 suppresses input of the likelihood calculation, `1` prints every step of the maximization/scan/error bar calculation. This is purely meant for debugging!
-- `tolerance_maximization (1e-3)` sets the stopping criterion by setting the tolerance of maximization: Stop when an optimization step changes the function value by less than tolerance. By setting very low tolerances one might encounter rounding issues, in that case, the last valid step is taken and a warning is printed to stderr.
-- `rel_tolerance_joints (1e-12)` sets the stopping criterium for the joint calculation. The calculation is stopped when the cross covariances between the two time points are smaller than the product of the corresponding means times the set tolerance. $\frac{\text{Cov}(z_{n+m}, z_n)_{i,j}}{ \langle z_{n+m}\rangle_i \langle z_n\rangle_j} < \text{tolerance }$
+- `print_level (0)` set to 0 suppresses input of the likelihood calculation, `1` prints every step of the maximization/scan/error bar calculation. This is meant for debugging!
+- `tolerance_maximization (1e-10)` sets the stopping criterion by setting the tolerance of maximization: Stop when an optimization step changes the function value by less than tolerance. By setting very low tolerances one might encounter rounding issues, in that case, the last valid step is taken and a warning is printed to stderr.
+- `rel_tolerance_joints (1e-10)` sets the stopping criterium for the joint calculation. The calculation is stopped when the cross covariances between the two time points are smaller than the product of the corresponding means times the set tolerance. $\frac{\text{Cov}(z_{n+m}, z_n)_{i,j}}{ \langle z_{n+m}\rangle_i \langle z_n\rangle_j} < \text{tolerance }$
 - `outdir` overwrites the default output directory, which is (given the infile `dir/example.csv/`) `dir/example_out/`
 - `search_space (log)` sets the search space of the parameters to be either in log space or linear space. The parameter file does not need to be changed as everything is done internally. 
 - `noise_model (scaled)` defines how the measurement noise depends on the content of fluorescence proteins. `const` means that the measurement is constant with a variance `var_g`. `scaled` means the variance of the measurement scales linearly with the fluorescence protein content. In this case `var_g` is the prefactor of the scaling. 
 - `cell_division (binomial)` defines the model for cell division. `binomial` splits the FP content according to the cell sizes of the daughter cells and binomial sampling. In this case, the parameter `var_dg` is the conversion factor between the FP input and the physical number of independent molecules that can be distributed across cells. `gauss` refers to a model where the FP contents of the daughter cells are drawn from a gaussian with variance `var_dg` centered around half of the mother cell FP content
 
 #### 2.3.1 Csv_config file
+Example:
 ```
 time_col = time_min
 rescale_time = 60
 length_col = length_um
 fp_col = GFP
+cell_tags = date, cell_id
+parent_tags = date, parent_id
 ```
-The following settings define how the input file will be interpreted.
+The following settings define how the input file will be interpreted. (Defaults are in brackets.)
 - `time_col (time)`: column from which the time is read
-- `rescale_time (1)`: the factor by which time will be divided before anything is run
+- `rescale_time (1)`: the factor by which time will be divided at the start, thus changing the time unit (e.g. `rescale_time=60` may change the time unit from sec to min)
 - `length_col (length)`: column from which the length of the cell is read
 - `length_islog (false)`: indicates if the cell length in the data file is in logscale (true) or not (false)
 - `fp_col (gfp)`: column from which the fluorescence protein content is read
 - `delm (,)`: delimiter between columns, probably ',' or ';'
 - `segment_col ()`: column from which the segment index is read. Not setting `segment_col` in the file indicates that segment indices will not be used 
 - `filter_col ()`: column from which the filter will be read. To include a data point, set the entry in this column to `True`, `true`, `TRUE` or `1` and to EXclude a data point, set the entry in this column to `False`, `false`, `FALSE` or `0`. Not setting `filter_col` in the file indicates that the input file will not be filtered
-- `cell_tag (cell_id)`: columns that will make up the unique cell id
-- `parent_tags (parent_id)`: columns that will make up the unique cell id of the parent cell, endings like .0 .00, etc of numeric values will be removed
+- `cell_tags (cell_id)`: columns that will make up the unique cell id, separated by ','
+- `parent_tags (parent_id)`: columns that will make up the unique cell id of the parent cell ','
 
 
 ## 3 Model parameters
-The 2 OU processes are described with a mean value (thus the mean growth/production rate), a gamma parameter determining how fast the process is driven towards its mean after a deviation, and a characteristic kick size that scales the noise term. Thus we have the following parameters:
-- Growth rate fluctuations params:
+The 2 OU processes are described with a mean value (thus the mean growth/production rate), a gamma parameter determining how fast the process is driven towards its mean after a deviation, and a characteristic kick size (paramterized by the square kick sizes var_lambda and var_q) that scales the noise term.
+- Growth rate fluctuations parameters:
     - mean_lambda
     - gamma_lambda  
     - var_lambda     
-- GFP fluctuation params:
+- Fluorescence production fluctuation parameters:
     - mean_q    
     - gamma_q    
     - var_q  
-- Bleaching rate
+- Bleaching rate:
     - beta    
-- cell division:
+- Cell division noise parameters:
     - var_dx 
     - var_dg     
-- Measurement noise:
+- Measurement noise parameters:
     - var_x     
     - var_g  
 
