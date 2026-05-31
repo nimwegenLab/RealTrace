@@ -1,0 +1,5 @@
+python3 setup.py -d stable_conditions/ -rescale_time 60
+
+python3 run.py -d stable_conditions/ -m -p    
+
+python3 plot_all_prediction_files.py -d stable_conditions/glucose020_hi1_20190515_rawdata_out
