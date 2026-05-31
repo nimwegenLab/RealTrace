@@ -7,3 +7,5 @@ bin/*
 */*.pyc
 */__pycache__/
 */.ipynb_checkpoints
+RealTrace_Tutorial/Tutorial_data/glucose020_hi1_rawdata_out/*
+RealTrace_Tutorial/Tutorial_data/*.txt
