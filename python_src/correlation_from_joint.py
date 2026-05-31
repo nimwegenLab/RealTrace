@@ -16,67 +16,7 @@ from multiprocessing import Pool
 import itertools
 
 
-# ---------------------------------------------------------------------------------------------------------- #
-# GGP_cell class to read prediction_files easily
-# ---------------------------------------------------------------------------------------------------------- #
-class GGP_cell:
-    def __init__(self, cell_id = 0, parent_id=-1):
-        self.parent_id = parent_id
-        self.cell_id = cell_id
-        self.log_length = []
-        self.gfp = []
-        self.time = []
 
-        self.mean_x = []
-        self.mean_g = []
-        self.mean_l = []
-        self.mean_q = []
-
-        self.cov_xx = []
-        self.cov_gg = []
-        self.cov_ll = []
-        self.cov_qq = []
-
-def df2ggp_cells(dataset, 
-            time="time", 
-            log_length="log_length", gfp="fp", 
-            mean_x="mean_x", mean_g="mean_g", 
-            mean_l="mean_l", mean_q="mean_q",
-            cov_xx="cov_xx",
-            cov_gg="cov_gg",
-            cov_ll="cov_ll",
-            cov_qq="cov_qq",
-            cell_id="cell_id", 
-            parent_id="parent_id"):
-    """ 
-    dataset (pandas data frame as read from csv file) to list of GGP_cell instances, m
-    written for ggp output
-    """
-    cell_list = []
-    last_cell = ""
-    for _, row in dataset.iterrows(): 
-        if row[cell_id] != last_cell:
-            new_cell = GGP_cell(
-                        cell_id=row[cell_id], 
-                        parent_id=row[parent_id])
-            cell_list.append(new_cell)
-
-        cell_list[-1].log_length.append(row[log_length])
-        cell_list[-1].gfp.append(row[gfp])
-        cell_list[-1].time.append(row[time])
-
-        cell_list[-1].mean_x.append(row[mean_x])
-        cell_list[-1].mean_g.append(row[mean_g])
-        cell_list[-1].mean_l.append(row[mean_l])
-        cell_list[-1].mean_q.append(row[mean_q])
-
-        cell_list[-1].cov_xx.append(row[cov_xx])
-        cell_list[-1].cov_gg.append(row[cov_gg])
-        cell_list[-1].cov_ll.append(row[cov_ll])
-        cell_list[-1].cov_qq.append(row[cov_qq])
-
-        last_cell = row[cell_id]
-    return cell_list
 
 
 def get_input_files(directory, keyword=None, ext=".csv"):
@@ -331,9 +271,6 @@ class Correlation:
         self.corr_naive = np.zeros((8,8))
         self.corr_concentration_naive = np.zeros((2,2))
 
-        if self.dt==0:
-            print(self.cov)
-
         if self.n>0:
             for i in range(8):
                 for j in range(8):
@@ -342,8 +279,7 @@ class Correlation:
                 for j in range(2):
                     self.corr_concentration_naive[i,j] =  self.cov_concentration[i,j] \
                                              / np.sqrt(self.cov_concentration[i,i] * self.cov_concentration[j,j])
-        if self.dt==0:
-            print(self.corr_naive)
+
 
     def mle(self, covarince0, covarince_concentration0, norm=True):
         """MLE of the correlation with error bars, sets corr_mle and corr_mle_err
@@ -530,11 +466,7 @@ def files2correlation_function(joint_file,
                         idx = np.argwhere(np.isclose(dts, dt, atol=tol))
                         if len(idx)>0:
                             correlations[idx[0,0]].add_gaussian(joint)
-                    else:
-                        print("cell_id_cols[j]", cell_id_cols[j])
-                        print("cell_id_row", cell_id_row)
-                        print("->", cell_lineage_lookup_table.loc[cell_id_row, cell_id_cols[j]])
-                        print("----------")
+
 
                         if cell_lineage_lookup_table.loc[cell_id_row, cell_id_cols[j]] and j>i:
                             
@@ -547,7 +479,7 @@ def files2correlation_function(joint_file,
                         
                 i += 1            
                 if cell_id_row != last_cell:
-                    print("\rNumber of cells processed: ", count_cells, end='')  
+                    # print("\rNumber of cells processed: ", count_cells, end='')  
                     count_cells += 1
 
                 last_cell = cell_id_row
@@ -648,7 +580,7 @@ def corr_to_csv(correlations, output_file):
             f.write(str(corr.corr_naive[2, 7])+",")
             f.write(str(corr.corr_naive[3, 6])+",")
             f.write(str(corr.corr_naive[3, 7])+",")
-            f.write(str(corr.corr_concentration_naive[0, 1])+",")
+            f.write(str(corr.corr_concentration_naive[0, 1]))
             
             f.write("\n")
     
@@ -698,9 +630,10 @@ def process_file(joint_filename, args):
         corr_to_csv(corr, output_file_csv)
         
         to_save_dict['correlations'] = corr
-        np.savez_compressed(output_file_npz,  **to_save_dict)
+        if args.save_as_npz:
+            np.savez_compressed(output_file_npz,  **to_save_dict)
 
-        print("Saved in", output_file_npz, "/", output_file_csv)
+        print("Saved in", output_file_csv)
 #     except Exception as e:
 #         print("ERROR :", str(e), ";", joint_filename, "failed")
 
@@ -751,6 +684,8 @@ def main():
                         default='_',
                         required=False)
     
+    parser.add_argument('--save_as_npz', help="Save results in an additional numpy npz file", action='store_true')
+
 
     args = parser.parse_args()
 
@@ -766,8 +701,7 @@ def main():
 
     try:
         n_cores = os.environ['SLURM_JOB_CPUS_PER_NODE']
-        print("slurm: number of cpus {}".format(n_cores))
-        print(n_cores)
+        print("Number of cpus provided (SLURM){}".format(n_cores))
         with get_context("spawn").Pool(int(n_cores)) as p:
             print("Start multiprocessing")
             p.starmap(process_file, zip(joint_filenames, itertools.repeat(args)))

@@ -1,4 +1,5 @@
 #include "predictions.h"
+#include <random>
 
 /*
 * This header relies on the Gaussian classes in contrast to the rest of the code, 
@@ -749,7 +750,7 @@ void write_covariances_to_file(std::vector<Eigen::MatrixXd> covariances, double 
         params_list[i].to_csv(outfile);
     else
         params_list[i].to_csv(outfile, std::ios_base::app);
-}     
+    }     
 
     Eigen::IOFormat CommaFormat(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", "", "\n");
 
@@ -789,3 +790,5 @@ void setup_outfile_joints(std::ostream &file, std::vector<Parameter_set>& params
     } 
     file << "\ncell_id,parent_id,time";
 }
+
+

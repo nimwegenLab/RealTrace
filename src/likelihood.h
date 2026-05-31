@@ -1,4 +1,4 @@
-#include "correlation_tree.h"
+#include "posterior_sampling.h"
 
 #include <Eigen/Dense>
 #define _USE_MATH_DEFINES

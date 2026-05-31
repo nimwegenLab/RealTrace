@@ -5,7 +5,7 @@
 #include <iostream> 
 #include <iterator> 
 #include <iomanip> 
-
+#include <random>
 std::ofstream _file_log;
 
 #include "likelihood.h"
@@ -160,7 +160,6 @@ void run_joint_distribution(std::vector<MOMAdata> &cells,
 
     std::string outfile_joints = outfile_name_joints(arguments, params_list);
 
-    /* if I get Boost to work on the cluster that is an option */
     // std::ofstream file(outfile_joints + ".gz", std::ios_base::out | std::ios_base::binary);
     // boost::iostreams::filtering_streambuf<boost::iostreams::output> outbuf;
     // outbuf.push(boost::iostreams::gzip_compressor());
@@ -187,6 +186,47 @@ void run_joint_distribution(std::vector<MOMAdata> &cells,
 
 
 
+void run_sampling(std::vector<MOMAdata> &cells, 
+                                std::vector<Parameter_set> params_list, 
+                                std::map<std::string, std::string> arguments, 
+                                const CSVconfig &config){
+    _file_log << "-> Sample posterior" << "\n";
+
+    std::vector<std::vector<double>> params_vecs;
+    for (size_t i=0; i<params_list.size(); ++i){
+        params_vecs.push_back(params_list[i].get_final());
+    }
+
+    init_cell_variables(cells);
+    first_joint_distributions(params_vecs, cells);
+
+
+    std::string outfile_samples = outfile_name_samples(arguments, params_list);
+    setup_outfile_samples( outfile_samples, params_list, std::stoi(arguments["n_samples"]));
+
+    for(size_t sample_idx=0; sample_idx<std::stoi(arguments["n_samples"]); ++sample_idx){
+        sample_trajectory(cells);
+        write_sample_to_file(outfile_samples, cells, sample_idx);
+    }
+
+
+    // Eigen::VectorXd mean(4);
+    // mean << 1.0, 2.0, 2, 1; // Mean vector
+
+    // Eigen::MatrixXd cov(4, 4);
+    // cov << 1, 0, 0, 0, 
+    //        0, 1.0, 0, 0,
+    //        0, 0, 1, 0,
+    //        0, 0, 0, 1;
+
+
+    // std::cout << sample_gaussian(mean, cov) << std::endl;
+
+
+}
+
+
+
 /* =============================================================================== */
 std::map<std::string, std::string> arg_parser(int argc, char** argv){
     std::vector<std::vector<std::string>> keys = 
@@ -195,16 +235,18 @@ std::map<std::string, std::string> arg_parser(int argc, char** argv){
         {"-i",      "--infile",                 "(required) input data file"},
         {"-b",      "--parameter_bounds",       "(required) file(s) setting the type, step, bounds of the parameters"},
         {"-c",      "--csv_config",             "file that sets the columns that will be used from the input file"},
-        {"-l",      "--print_level",            "print level {0,1,2}, default: 0"},
+        // {"-l",      "--print_level",            "print level {0,1,2}, default: 0"},
         {"-o",      "--outdir",                 "specify output direction and do not use default"},
-        {"-t",      "--tolerance_maximization",  "absolute tolerance of maximization between optimization steps, default: 1e-10"},
-        {"-r",      "--rel_tolerance_joints",    "relative tolerance of joint calculation: default 1e-10"},
+        {"-t",      "--tolerance_maximization", "absolute tolerance of maximization between optimization steps, default: 1e-10"},
+        {"-r",      "--rel_tolerance_joints",   "relative tolerance of joint calculation: default 1e-10"},
+        {"-n",      "--n_samples",              "number of samples: default 10"},
         {"-space",  "--search_space",           "search parameter space in {'log'|'linear'} space, default: 'log'"},
         {"-noise",  "--noise_model",            "measurement noise of fp content {'scaled'|'const'} default: 'scaled'"},
-        {"-div",    "--cell_division_model",          "cell divison model {'binomial'|'gauss'} default: 'binomial'"},
+        {"-div",    "--cell_division_model",    "cell division model {'binomial'|'gauss'} default: 'binomial'"},
         {"-m",      "--maximize",               "run maximization"},
-        {"-s",      "--scan",                   "run 1d parameter scan"},
+        // {"-s",      "--scan",                   "run 1d parameter scan"},
         {"-p",      "--predict",                "run prediction"},
+        {"-s",      "--samples",                "sample trajectories"},
         {"-j",      "--joints",                 "run calculation of joint probabilities"}
         };
 
@@ -218,6 +260,7 @@ std::map<std::string, std::string> arg_parser(int argc, char** argv){
     arguments["print_level"] = "0";
     arguments["tolerance_maximization"] = "1e-10";
     arguments["rel_tolerance_joints"] = "1e-10";
+    arguments["n_samples"] = "10";
     arguments["search_space"] = "log";
     arguments["noise_model"] = "scaled";
     arguments["cell_division_model"] = "binomial";
@@ -240,14 +283,14 @@ std::map<std::string, std::string> arg_parser(int argc, char** argv){
                 }
                 else if(k==key_indices["-c"]) 
                     arguments["csv_config"] = argv[i+1];
-				else if(k==key_indices["-l"])
-                    arguments["print_level"] = argv[i+1];
 				else if(k==key_indices["-o"])
                     arguments["outdir"] = argv[i+1];
 				else if(k==key_indices["-t"])
                     arguments["tolerance_maximization"] = argv[i+1];
                 else if(k==key_indices["-r"])
                     arguments["rel_tolerance_joints"] = argv[i+1];
+                else if(k==key_indices["-n"])
+                    arguments["n_samples"] = argv[i+1];
                 else if(k==key_indices["-space"])
                     arguments["search_space"] = argv[i+1];
                 else if(k==key_indices["-noise"])
@@ -258,13 +301,17 @@ std::map<std::string, std::string> arg_parser(int argc, char** argv){
                     arguments["search_space"] = argv[i+1];
                 else if(k==key_indices["-m"])
                     arguments["minimize"] = "1";
-                else if(k==key_indices["-s"])
-                    arguments["scan"] = "1";
+                // else if(k==key_indices["-s"])
+                //     arguments["scan"] = "1";
                 else if(k==key_indices["-p"])
                     arguments["predict"] = "1";
                 else if(k==key_indices["-j"]){
                     arguments["joints"] = "1";
                     arguments["predict"] = "1"; // needs to be run prior to the auto covariance calculation
+                }
+                else if(k==key_indices["-s"]){
+                    arguments["samples"] = "1";
+                    arguments["predict"] = "1"; // needs to be run prior 
                 }
                 else if (k==key_indices["-h"]){
                     arguments["help"] = "1";
@@ -339,8 +386,6 @@ std::string outfile_name_log(std::map<std::string, std::string> arguments, std::
 
 int main(int argc, char** argv){
 
-    // test_mean_cov_model();
-    // return 0;
     std::string outfile_log;
     std::string outfile_log_success;
     std::string outfile_log_error;
@@ -416,20 +461,20 @@ int main(int argc, char** argv){
             }
         }
 
-        if (arguments.count("scan")){
-            for(size_t i=0; i<segment_indices.size(); ++i){
-                std::vector<MOMAdata> cells_in_segment = get_segment(cells, segment_indices[i]);
+        // if (arguments.count("scan")){
+        //     for(size_t i=0; i<segment_indices.size(); ++i){
+        //         std::vector<MOMAdata> cells_in_segment = get_segment(cells, segment_indices[i]);
 
-                /* genealogy built via the parent_id (string) given in data file */
-                build_cell_genealogy(cells_in_segment);
+        //         /* genealogy built via the parent_id (string) given in data file */
+        //         build_cell_genealogy(cells_in_segment);
 
-                /* inititialize mean and cov for forward and backward direction */
-                init_cells(cells_in_segment);
+        //         /* inititialize mean and cov for forward and backward direction */
+        //         init_cells(cells_in_segment);
 
-                /* Run scan*/
-                run_bound_1dscan(cells_in_segment, params_list[i], arguments, get_segment_file_number(segment_indices, i));
-            }
-        }
+        //         /* Run scan*/
+        //         run_bound_1dscan(cells_in_segment, params_list[i], arguments, get_segment_file_number(segment_indices, i));
+        //     }
+        // }
 
         if (arguments.count("predict")){
             build_cell_genealogy(cells);
@@ -441,6 +486,12 @@ int main(int argc, char** argv){
             /* Run joints, note that prediction was already run as this stage! */
             run_joint_distribution(cells, params_list, arguments, config);
         }
+
+        if (arguments.count("samples")){
+            /* Run samples, note that prediction was already run as this stage! */
+            run_sampling(cells, params_list, arguments, config);
+        }
+
 
         _file_log << "Done." << std::endl;
 

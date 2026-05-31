@@ -66,6 +66,7 @@ public:
     }
     Affine_gaussian transform();
     Gaussian transform(Eigen::VectorXd y);
+    Gaussian evaluate(Eigen::VectorXd x);
 };
 
 Affine_gaussian Affine_gaussian::transform(){
@@ -86,13 +87,18 @@ Gaussian Affine_gaussian::transform(Eigen::VectorXd y){
     return n;
 }
 
+Gaussian Affine_gaussian::evaluate(Eigen::VectorXd x){
+    /* evalutes the mean for an affine gaussian N(y | a + F x, A) for a given x */
+    Gaussian n(a + F*x, A);
+    return n;
+}
 
 /* ============== Seperated_gaussian class ============== */
 class Seperated_gaussian{
     /*  
     * A class describing a joint gaussian as a product of 
     * mearginal and conditional in the form: N(x | m, C) N(y | a + F x, A)
-    * It makes use of the Gaussian class and the 
+    * It makes use of the Gaussian class and the Affine_gaussian class
     */
 public:
     Gaussian marginal;
@@ -127,7 +133,7 @@ Gaussian Seperated_gaussian::to_joint(int n){
 Seperated_gaussian seperate_gaussian(Gaussian joint, int n=4){
     /* 
     * rewrites the joint  N([x y]| m, C) as sperated gaussians (N(x | m, C) N(y | a + F x, A)) whith matching m, C, a, F, A  
-    * "Inverse" of to_joint() (and thus not part of Seperated_gaussian classe)
+    * "Inverse" of to_joint() (and thus not part of Seperated_gaussian class)
     */
     Eigen::MatrixXd B = joint.C.bottomRightCorner(n,n);
     Eigen::MatrixXd K = joint.C.topRightCorner(n,n);

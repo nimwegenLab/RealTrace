@@ -15,5 +15,5 @@ cluster:
 	g++ main.cpp $(CFLAGS) $(NLOPTLAGS64) $(FADFLAG) -static-libstdc++ -lstdc++fs -o ../bin/RealTrace
 
 local: 
-	g++ main.cpp -Wall -stdlib=libc++  $(CFLAGS) $(NLOPTLAGS) $(EIGENFLAG) $(FADFLAG)  -o ../bin/RealTrace
+	g++ main.cpp -stdlib=libc++ -static-libstdc++  $(CFLAGS) $(NLOPTLAGS) $(EIGENFLAG) $(FADFLAG)  -o ../bin/RealTrace
 

@@ -72,6 +72,12 @@ public:
     Gaussian joint;
     
 
+    // consecutive joints and conditionals for sampling 
+    std::vector<Gaussian> consecutive_joints;
+    std::vector<Affine_gaussian> conditionals;
+
+    std::vector<Eigen::Vector4d> sample;
+
     // member functions
     bool is_leaf() const;
     bool is_root() const;
