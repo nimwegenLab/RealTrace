@@ -1,2 +1,0 @@
-# Readme for the RealTrace Tutorial
-The [Jupyter notebook](https://github.com/nimwegenLab/RealTrace/tree/main/RealTrace_Tutorial/RealTrace_Tutorial_notebook.ipynb) is a step-by-step guide for the usage of RealTrace and the analysis of RealTrace's output.
