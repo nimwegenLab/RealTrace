@@ -9,7 +9,7 @@ The [Jupyter notebook](https://github.com/nimwegenLab/RealTrace/tree/main/RealTr
 3. Plotting sampled cell trajectories and illustrates their use by recalculating the correlation functions
 
 
-## Minimal Example
+## Minimal example
 If you want to run a minimal example, the `Minimal_example_data` folder contains all files to run RealTrace directly on a synthetic data set. To run RealTrace on this data run from this directory (expected runtime is around 2min depending on the machine):
 ```
 ../bin/RealTrace -i Minimal_example_data/input.csv -b Minimal_example_data/parameter_file.txt -c Minimal_example_data/csv_config.txt -m -p
