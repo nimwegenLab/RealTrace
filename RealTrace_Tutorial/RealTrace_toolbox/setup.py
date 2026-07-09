@@ -122,8 +122,7 @@ def estimate_parameters(data_df, args, beta):
                                 cell_id="__temp_cell_id__", 
                                 parent_id="__temp_parent_id__")
     
-    cc_time = np.mean([cell.time[-1] - cell.time[0] for cell in cells_data])
-    
+    cc_time = np.mean([cell.time[-1] - cell.time[0] for cell in cells_data])    
     
     # OUs
     # Growth

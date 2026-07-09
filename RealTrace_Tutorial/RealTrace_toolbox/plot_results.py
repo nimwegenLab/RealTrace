@@ -191,14 +191,14 @@ def plot_predictions(filename,
         ax[1].plot(time, cell.mean_g, color=prediction_color, lw=lw)
         ax[1].fill_between(time, cell.mean_g-np.sqrt(cell.cov_gg), cell.mean_g+np.sqrt(cell.cov_gg), 
                     color=prediction_color, alpha=0.2)
-        
-        ax[2].plot(time, cell.mean_l*time_unit[1], color=prediction_color, lw=lw)
+
+        ax[2].plot(time, np.array(cell.mean_l)*time_unit[1], color=prediction_color, lw=lw)
         ax[2].fill_between(time, 
                            (cell.mean_l-np.sqrt(cell.cov_ll))*time_unit[1], 
                            (cell.mean_l+np.sqrt(cell.cov_ll))*time_unit[1], 
                             color=prediction_color, alpha=0.2)
 
-        ax[3].plot(time, cell.mean_q*time_unit[1], color=prediction_color, lw=lw)
+        ax[3].plot(time, np.array(cell.mean_q)*time_unit[1], color=prediction_color, lw=lw)
         ax[3].fill_between(time, 
                            (cell.mean_q-np.sqrt(cell.cov_qq))*time_unit[1], 
                            (cell.mean_q+np.sqrt(cell.cov_qq))*time_unit[1], 
