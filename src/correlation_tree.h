@@ -186,8 +186,8 @@ Gaussian consecutive_joint_cell_division(const std::vector<double> &params_vec, 
     if (cell.cell_division_model == "binomial"){
         /* cov of t+1 */
         cell.cov(0,0) += var_dx;
-        cell.cov(0,1) = cell.cov(1,0) = cell.mean(1)/2. * var_dx + cell.cov(0,1); 
-        cell.cov(1,1) =   var_dx * (cell.mean(1)*cell.mean(1) + cell.cov(1,1))/2.\
+        cell.cov(0,1) = cell.cov(1,0) = cell.mean(1)/2. * var_dx + cell.cov(0,1)/2.; 
+        cell.cov(1,1) = var_dx * cell.mean(1)*cell.mean(1)/4. + var_dx*cell.cov(1,1)/2.\
                         + var_dg * cell.mean(1)/4. * (1-var_dx) \
                         + cell.cov(1,1)/4.;
 
@@ -197,7 +197,8 @@ Gaussian consecutive_joint_cell_division(const std::vector<double> &params_vec, 
         cell.cov(3,1) /= 2;
         cell.cov(1,3) /= 2;
 
-        cell.mean = F*cell.mean + f;
+        cell.mean(0) = cell.mean(0) - log(2.);
+        cell.mean(1) = cell.mean(1)/2.*exp(var_dx/2.);
 
         Eigen::MatrixXd cross_cov = cell.cov_forward[t];
         cross_cov(1, 0) /= 2.;
@@ -266,8 +267,8 @@ Affine_gaussian consecutive_conditional_cell_division(const std::vector<double> 
     if (cell.cell_division_model == "binomial"){
         /* cov of t+1 */
         cell.cov(0,0) += var_dx;
-        cell.cov(0,1) = cell.cov(1,0) = cell.mean(1)/2. * var_dx + cell.cov(0,1); 
-        cell.cov(1,1) =   var_dx * (cell.mean(1)*cell.mean(1) + cell.cov(1,1))/2.\
+        cell.cov(0,1) = cell.cov(1,0) = cell.mean(1)/2. * var_dx + cell.cov(0,1)/2.; 
+        cell.cov(1,1) = var_dx * cell.mean(1)*cell.mean(1)/4. + var_dx*cell.cov(1,1)/2.\
                         + var_dg * cell.mean(1)/4. * (1-var_dx) \
                         + cell.cov(1,1)/4.;
 
@@ -277,7 +278,8 @@ Affine_gaussian consecutive_conditional_cell_division(const std::vector<double> 
         cell.cov(3,1) /= 2;
         cell.cov(1,3) /= 2;
 
-        cell.mean = F*cell.mean + f;
+        cell.mean(0) = cell.mean(0) - log(2.);
+        cell.mean(1) = cell.mean(1)/2.*exp(var_dx/2.);
 
         Eigen::MatrixXd cross_cov = cell.cov_forward[t];
         cross_cov(1, 0) /= 2.;

@@ -39,8 +39,8 @@ void mean_cov_after_division(MOMAdata &cell, const std::vector<double> &params_v
 
     if (cell.cell_division_model == "binomial"){
         cell.cov(0,0) += var_dx;
-        cell.cov(0,1) = cell.cov(1,0) = cell.mean(1)/2. * var_dx + cell.cov(0,1); 
-        cell.cov(1,1) =   var_dx * (cell.mean(1)*cell.mean(1) + cell.cov(1,1))/2.\
+        cell.cov(0,1) = cell.cov(1,0) = cell.mean(1)/2. * var_dx + cell.cov(0,1)/2.; 
+        cell.cov(1,1) = var_dx * cell.mean(1)*cell.mean(1)/4. + var_dx*cell.cov(1,1)/2.\
                         + var_dg * cell.mean(1)/4. * (1-var_dx) \
                         + cell.cov(1,1)/4.;
 
@@ -50,7 +50,10 @@ void mean_cov_after_division(MOMAdata &cell, const std::vector<double> &params_v
         cell.cov(3,1) /= 2;
         cell.cov(1,3) /= 2;
 
-        cell.mean = F*cell.mean + f;
+        cell.mean(0) = cell.mean(0) - log(2.);
+        cell.mean(1) = cell.mean(1)/2.*exp(var_dx/2.);
+
+        // = F*cell.mean + f;
     }
     else{
         D(0,0) = var_dx;
@@ -227,7 +230,7 @@ void mean_cov_after_division_r(MOMAdata &cell, std::vector<double> params_vec){
         cell.cov(1,3) *= 2;
 
         cell.mean(0) += log(2.);
-        cell.mean(1) *= 2;
+        cell.mean(1) *= (2. *exp(3.*var_dx/2.));
     }
     else{
         D(0,0) = var_dx;
@@ -256,7 +259,7 @@ void mean_cov_after_division_r(MOMAdata &cell, std::vector<double> params_vec){
             cov2(1,3) *= 2;
 
             mean2(0) += log(2.);
-            mean2(1) *= 2;
+            mean2(1) *= (2. *exp(3.*var_dx/2.));
         }
         else{
             D(0,0) = var_dx;
