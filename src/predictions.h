@@ -221,7 +221,7 @@ void mean_cov_after_division_r(MOMAdata &cell, std::vector<double> params_vec){
         cell.cov(0,0) += var_dx;
         cell.cov(1,1) = 8. * var_dx * (cell.mean(1)*cell.mean(1) + cell.cov(1,1)) \
                     + 2. * var_dg * cell.mean(1) \
-                    + 8. * cell.cov(1,1);
+                    + 4. * cell.cov(1,1);
         cell.cov(0,1) = cell.cov(1,0) = 2.*cell.mean(1) * var_dx + 4.*cell.cov(0,1); 
 
         cell.cov(2,1) *= 2;
