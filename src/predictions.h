@@ -40,7 +40,7 @@ void mean_cov_after_division(MOMAdata &cell, const std::vector<double> &params_v
     if (cell.cell_division_model == "binomial"){
         cell.cov(0,0) += var_dx;
         cell.cov(0,1) = cell.cov(1,0) = cell.mean(1)/2. * var_dx + cell.cov(0,1)/2.; 
-        cell.cov(1,1) = var_dx * cell.mean(1)*cell.mean(1)/4. + var_dx*cell.cov(1,1)/2.\
+        cell.cov(1,1) = var_dx * cell.mean(1)*cell.mean(1)/4. + var_dx*cell.cov(1,1)/4.\
                         + var_dg * cell.mean(1)/4. * (1-var_dx) \
                         + cell.cov(1,1)/4.;
 
